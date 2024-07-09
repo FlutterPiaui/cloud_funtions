@@ -1,8 +1,11 @@
 import {onRequest} from "firebase-functions/v2/https";
 import * as express from "express";
 import fetch from "node-fetch";
+import {GoogleGenerativeAI} from "@google/generative-ai";
+
 
 const app = express.default();
+app.use(express.json());
 
 const baseUrl = "https://api.themoviedb.org/3";
 const apiKey = `Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI3YmM3
@@ -54,4 +57,30 @@ app.get("/:movieName", async (req: express.Request, res: express.Response) => {
   }
 });
 
+// Função para enviar prompt para a API do Google Gemini
+const sendPromptToGemini = async (prompt: string) => {
+  const apiKey = "AIzaSyDLiWuBeNFgibVQMbBUYSyhXpa15Ltf8sI";
+  const genAI = new GoogleGenerativeAI(apiKey);
+
+  const model = genAI.getGenerativeModel({model: "gemini-1.5-flash"});
+  const result = await model.generateContent(prompt);
+  const response = await result.response;
+  const text = response.text();
+
+  return text;
+};
+
+// Novo endpoint para a API do Google Gemini
+app.post("/gemini", async (req: express.Request, res: express.Response) => {
+  try {
+    const prompt = req.body.prompt;
+    const geminiResponse = await sendPromptToGemini(prompt);
+    res.send({response: geminiResponse});
+  } catch (error) {
+    res.status(500).send({error: "Something went wrong"});
+  }
+});
+
+
 export const movieDetails = onRequest(app);
+export const geminiEndpoint = onRequest(app);
