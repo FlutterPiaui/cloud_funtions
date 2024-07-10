@@ -13,6 +13,10 @@ DAyMzIsInN1YiI6IjY2ODkyNjY2MjBlODcyZGE2NmEwNjIxMiIsInNjb3BlcyI6WyJh
 cGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.u01Mjer3_
 VU9NLR867c8HFpWarF5BZ2XYjDPbBB2TWc`.replace(/\n/g, "");
 
+const formatPrompt = (prompt: string) => {
+  return `"${prompt}". Please provide the titles of the movies and where to watch them in JSON format. The JSON object should have the keys "title" and "streaming_platform". If a movie is not available on a streaming platform, please indicate "Not Available".`;
+}
+
 const getMovieId = async (movieName: string) => {
   const url = `${baseUrl}/search/movie?query=${movieName}
   &include_adult=true&language=en-US&page=1`.replace(/\n/g, "");
@@ -71,8 +75,13 @@ const sendPromptToGemini = async (prompt: string) => {
 app.post("/gemini", async (req: express.Request, res: express.Response) => {
   try {
     const prompt = req.body.prompt;
-    const geminiResponse = await sendPromptToGemini(prompt);
-    res.send({response: geminiResponse});
+    const geminiResponse = await sendPromptToGemini(formatPrompt(prompt));
+    
+    const formattedResponse = {
+      response: JSON.stringify(geminiResponse, null, 4)
+    };
+
+    res.json(formattedResponse);
   } catch (error) {
     res.status(500).send({error: "Something went wrong"});
   }
