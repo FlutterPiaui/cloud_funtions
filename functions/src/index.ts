@@ -2,6 +2,7 @@ import {onRequest} from "firebase-functions/v2/https";
 import * as express from "express";
 import fetch from "node-fetch";
 import {GoogleGenerativeAI} from "@google/generative-ai";
+import {logger} from "firebase-functions/v1";
 
 const app = express.default();
 app.use(express.json());
@@ -14,8 +15,12 @@ cGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.u01Mjer3_
 VU9NLR867c8HFpWarF5BZ2XYjDPbBB2TWc`.replace(/\n/g, "");
 
 const formatPrompt = (prompt: string) => {
-  return `"${prompt}". Please provide the titles of the movies and where to watch them in JSON format. The JSON object should have the keys "title" and "streaming_platform". If a movie is not available on a streaming platform, please indicate "Not Available".`;
-}
+  return `"${prompt}". Please provide the titles of the
+   movies, post of the movies, description of the movies and where to watch them in JSON format like this '{"result":true, "count":42}' without this
+   \`\`\`json in the beginning and this \`\`\` in the end. The
+   JSON object should have the keys "title", "streaming_platform", "image", "description"
+   If a movie is not available on a streaming platform, please indicate "Not Available".`;
+};
 
 const getMovieId = async (movieName: string) => {
   const url = `${baseUrl}/search/movie?query=${movieName}
@@ -76,12 +81,9 @@ app.post("/gemini", async (req: express.Request, res: express.Response) => {
   try {
     const prompt = req.body.prompt;
     const geminiResponse = await sendPromptToGemini(formatPrompt(prompt));
-    
-    const formattedResponse = {
-      response: JSON.stringify(geminiResponse, null, 4)
-    };
+    logger.log(JSON.parse(geminiResponse));
 
-    res.json(formattedResponse);
+    res.json(JSON.parse(geminiResponse));
   } catch (error) {
     res.status(500).send({error: "Something went wrong"});
   }
