@@ -47,8 +47,17 @@ const getMovieDetails = async (movieId: string) => {
       Authorization: apiKey,
     },
   };
+
   const res = await fetch(url, options);
   const movieData = await res.json();
+
+
+  if (movieData.poster_path) {
+    movieData.poster_url = `https://image.tmdb.org/t/p/w600_and_h900_bestv2/${movieData.poster_path}`;
+  } else {
+    movieData.poster_url = "https://example.com/default-poster.jpg";
+  }
+
   return movieData;
 };
 
@@ -58,7 +67,7 @@ app.get(
     try {
       const id = await getMovieId(req.params.movieName);
       const movieData = await getMovieDetails(id);
-      res.send(movieData);
+      res.json(movieData); // Agora inclui a URL completa do pôster
     } catch (error) {
       res.status(500).send({error: "Something went wrong"});
     }
