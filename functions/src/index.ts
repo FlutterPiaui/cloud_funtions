@@ -14,11 +14,12 @@ DAyMzIsInN1YiI6IjY2ODkyNjY2MjBlODcyZGE2NmEwNjIxMiIsInNjb3BlcyI6WyJh
 cGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.u01Mjer3_
 VU9NLR867c8HFpWarF5BZ2XYjDPbBB2TWc`.replace(/\n/g, "");
 
-const formatPrompt = (prompt: string) => {
-  return ` Please provide five movies that are similar to "${prompt}". provide the titles of the
-   movies, poster of the movies, description of the movies and where to watch them in JSON format like this '{"result":true, "count":42}' without this
+const formatPrompt = (prompt: string, language: string) => {
+  return ` Please provide five movies that are similar to "${prompt}". Provide the titles of the
+   movies in English, the titles of the movies in ${language}, poster of the movies, description of the movies in ${language}
+   and where to watch them in JSON format like this '{"result":true, "count":42}' without this
    \`\`\`json in the beginning and this \`\`\` in the end. The
-   JSON object should have the keys "title", "streaming_platform", "image", "description"
+   JSON object should have the keys "title", "title_${language}", "streaming_platform", "image", "description"
    If a movie is not available on a streaming platform, please indicate "Not Available".`;
 };
 
@@ -105,7 +106,8 @@ app.post("/gemini", async (req: express.Request, res: express.Response) => {
   try {
     logger.info("Received request:", req.body);
     const prompt = req.body.prompt;
-    const geminiResponse = await sendPromptToGemini(formatPrompt(prompt));
+    const language = req.body.language;
+    const geminiResponse = await sendPromptToGemini(formatPrompt(prompt, language));
     logger.info("Gemini response:", geminiResponse);
 
     const parsedResponse = JSON.parse(geminiResponse);
