@@ -99,7 +99,9 @@ const sendPromptToGemini = async (prompt: string) => {
   const response = await result.response;
   const text = response.text();
 
-  return text;
+  const cleanedText = text.replace(/```json\n|\n```/g, "");
+
+  return cleanedText;
 };
 
 app.post("/gemini", async (req: express.Request, res: express.Response) => {
