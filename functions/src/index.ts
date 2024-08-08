@@ -31,6 +31,25 @@ const defaultPrompt = () =>
    If a movie is not available on a streaming platform,
    please indicate "Not Available".`;
 
+interface MovieVideo {
+  type: string;
+  key: string;
+}
+
+interface Provider {
+  display_priority: number;
+  logo_path: string;
+  provider_id: number;
+  provider_name: string;
+}
+
+interface ProvidersResult {
+  link: string;
+  flatrate?: Provider[];
+  rent?: Provider[];
+  buy?: Provider[];
+}
+
 const formatPrompt = (prompt: string, language: string) => {
   return `${prompt}${defaultPrompt()}${languageChoicePrompt(language)}`;
 };
@@ -52,7 +71,11 @@ const getMovieId = async (movieName: string) => {
 };
 
 const getMovieDetails = async (movieId: string) => {
-  const url = `${baseUrl}/movie/${movieId}?language=en-US`;
+  const movieDetailUrl = `${baseUrl}/movie/${movieId}?language=pt-BR`;
+  const movieVideosUrl = `${baseUrl}/movie/${movieId}/videos?language=pt-BR'`;
+  const movieProvidersUrl = `${baseUrl}/movie/${movieId}/watch/providers?language=pt-BR'`;
+  const movieRecommendationsUrl = `${baseUrl}/movie/${movieId}/recommendations?language=pt-BR'`;
+
   const options = {
     method: "GET",
     headers: {
@@ -61,8 +84,36 @@ const getMovieDetails = async (movieId: string) => {
     },
   };
 
-  const res = await fetch(url, options);
-  const movieData = await res.json();
+  const movieDetailResponse = await fetch(movieDetailUrl, options);
+  const movieData = await movieDetailResponse.json();
+
+  const movieVideosResponse = await fetch(movieVideosUrl, options);
+  const movieVideosData = await movieVideosResponse.json();
+
+  const movieProvidersResponse = await fetch(movieProvidersUrl, options);
+  const movieProvidersData = await movieProvidersResponse.json();
+
+  const movieRecommendationsResponse = await fetch(
+    movieRecommendationsUrl,
+    options
+  );
+  const movieRecommendationsData = await movieRecommendationsResponse.json();
+
+  const movieTrailer: MovieVideo = movieVideosData["results"].find(
+    (video: MovieVideo) => video["type"] === "Trailer"
+  );
+
+  const movieProviders: ProvidersResult = movieProvidersData["results"]["BR"];
+
+  const movieRecommendations = movieRecommendationsData["results"].slice(0, 6);
+
+  movieData[
+    "trailerUrl"
+  ] = `https://www.youtube.com/watch?v=${movieTrailer["key"]}`;
+
+  movieData["providers"] = movieProviders["flatrate"];
+
+  movieData["recommendations"] = movieRecommendations;
 
   if (movieData.poster_path) {
     movieData.poster_url = `https://image.tmdb.org/t/p/w500/${movieData.poster_path}`;
@@ -81,7 +132,7 @@ app.get(
       const movieData = await getMovieDetails(id);
       res.json(movieData);
     } catch (error) {
-      res.status(500).send({error: "Something went wrong"});
+      res.status(500).send(error);
     }
   }
 );
@@ -108,7 +159,7 @@ app.post("/gemini", async (req: express.Request, res: express.Response) => {
 
     res.json(JSON.parse(geminiResponse.slice(7, -3)));
   } catch (error) {
-    res.status(500).send({error: "Something went wrong"});
+    res.status(500).send(error);
   }
 });
 
