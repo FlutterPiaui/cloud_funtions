@@ -1,8 +1,8 @@
-import { onRequest } from "firebase-functions/v2/https";
+import {onRequest} from "firebase-functions/v2/https";
 import * as express from "express";
 import fetch from "node-fetch";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import { logger } from "firebase-functions";
+import {GoogleGenerativeAI} from "@google/generative-ai";
+import {logger} from "firebase-functions";
 
 const app = express.default();
 app.use(express.json());
@@ -139,14 +139,14 @@ app.get(
     try {
       const id = await getMovieId(req.params.movieName);
       if (!id) {
-        res.status(404).send({ error: "Movie not found" });
+        res.status(404).send({error: "Movie not found"});
         return;
       }
       const movieData = await getMovieDetails(id);
       res.json(movieData); // Agora inclui a URL completa do pôster
     } catch (error) {
       logger.error(`Error handling GET /movie/${req.params.movieName}:`, error);
-      res.status(500).send({ error: "Something went wrong" });
+      res.status(500).send({error: "Something went wrong"});
     }
   }
 );
@@ -155,7 +155,7 @@ const sendPromptToGemini = async (prompt: string) => {
   const apiKey = "AIzaSyDLiWuBeNFgibVQMbBUYSyhXpa15Ltf8sI";
   const genAI = new GoogleGenerativeAI(apiKey);
 
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  const model = genAI.getGenerativeModel({model: "gemini-1.5-flash"});
   const result = await model.generateContent(prompt);
   const response = await result.response;
   const text = response.text();
@@ -200,7 +200,7 @@ app.post("/gemini", async (req: express.Request, res: express.Response) => {
     res.json(movies);
   } catch (error) {
     logger.error("Error in /gemini endpoint:", error);
-    res.status(500).send({ error: "Something went wrong" });
+    res.status(500).send({error: "Something went wrong"});
   }
 });
 
