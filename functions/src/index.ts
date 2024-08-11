@@ -107,10 +107,16 @@ const getMovieDetails = async (movieId: string) => {
 
     const movieProviders: ProvidersResult = movieProvidersData["results"]["BR"];
 
-    const movieRecommendations = movieRecommendationsData["results"].slice(
-      0,
-      6
-    );
+    const movieRecommendations = movieRecommendationsData["results"].slice(0, 6).map((movie: any) => {
+      if (movie.poster_path) {
+        movie.poster_url = `https://image.tmdb.org/t/p/w500/${movie.poster_path}`;
+        delete movie.poster_path;
+      } else {
+        movie.poster_url = "https://example.com/default-poster.jpg";
+      }
+      delete movie.logo_path;
+      return movie;
+    });
 
     movieData[
       "trailerUrl"
