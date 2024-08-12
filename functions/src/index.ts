@@ -101,7 +101,7 @@ const getMovieDetails = async (movieId: string) => {
     );
     const movieRecommendationsData = await movieRecommendationsResponse.json();
 
-    const movieTrailer: MovieVideo = movieVideosData["results"].find(
+    const movieTrailer: MovieVideo | undefined = movieVideosData["results"].find(
       (video: MovieVideo) => video["type"] === "Trailer"
     );
 
@@ -118,9 +118,9 @@ const getMovieDetails = async (movieId: string) => {
       return movie;
     });
 
-    movieData[
-      "trailerUrl"
-    ] = `https://www.youtube.com/watch?v=${movieTrailer["key"]}`;
+    movieData["trailerUrl"] = movieTrailer ?
+      `https://www.youtube.com/watch?v=${movieTrailer["key"]}` :
+      null;
 
     movieData["providers"] = movieProviders["flatrate"];
 
@@ -129,7 +129,7 @@ const getMovieDetails = async (movieId: string) => {
     if (movieData.poster_path) {
       movieData.poster_url = `https://image.tmdb.org/t/p/w500/${movieData.poster_path}`;
     } else {
-      movieData.poster_url = "https://example.com/default-poster.jpg";
+      movieData.poster_url = "https://st4.depositphotos.com/14953852/24787/v/380/depositphotos_247872612-stock-illustration-no-image-available-icon-vector.jpg";
     }
 
     return movieData;
@@ -195,11 +195,11 @@ app.post("/gemini", async (req: express.Request, res: express.Response) => {
           const movieDetails = await getMovieDetails(movieId);
           movie.image = movieDetails.poster_url;
         } else {
-          movie.image = "https://example.com/default-poster.jpg";
+          movie.image = "https://st4.depositphotos.com/14953852/24787/v/380/depositphotos_247872612-stock-illustration-no-image-available-icon-vector.jpg";
         }
       } catch (error) {
         logger.error(`Error processing movie: ${movie.title}`, error);
-        movie.image = "https://example.com/default-poster.jpg";
+        movie.image = "https://st4.depositphotos.com/14953852/24787/v/380/depositphotos_247872612-stock-illustration-no-image-available-icon-vector.jpg";
       }
     }
 
